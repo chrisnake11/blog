@@ -1,8 +1,8 @@
 ---
 title: PrincipleComponentAnalysis
 published: 2025-03-23T11:11:28Z
-tags: ['research']
-category: 'research'
+tags: ['Neural Network']
+category: 'Neural Network'
 ---
 
 # PrincipleComponentAnalysis PCA 主成分分析

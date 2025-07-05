@@ -1,8 +1,8 @@
 ---
 title: qml.qnn.TorchLayer()的参数传递机制
 published: 2025-02-27T16:44:39Z
-tags: ['research']
-category: 'research'
+tags: ['Quantum Computing']
+category: 'Quantum Computing'
 ---
 
 在 PennyLane 的 `qml.qnn.TorchLayer` 中，`weight_shapes` 通过 **自动解包参数** 的方式传递给 `circuit`，主要依赖于 `qml.QNode` 的 **参数绑定机制**。  

@@ -2,7 +2,7 @@
 title: vcpkg配置redis库
 published: 2025-05-30T00:21:18Z
 tags: ['C++']
-category: 'C++'
+category: 'ChatRoom'
 ---
 
 # vcpkg配置redis库

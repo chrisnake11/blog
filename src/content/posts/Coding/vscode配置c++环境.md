@@ -3,8 +3,8 @@ title: vscode配置c++环境
 published: 2024-09-02T10:25:51Z
 description: 'vscode配置c++环境：下载配置编译器，配置vscode的c++编译、debug环境，mingw导入第三方库'
 image: ''
-tags: ['环境配置', 'c++', 'vscode']
-category: '环境配置'
+tags: ['环境配置', 'C++', 'vscode']
+category: 'C++'
 draft: false
 ---
 
