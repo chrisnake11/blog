@@ -1,7 +1,7 @@
 ---
-title: 15周工作
+title: PennyLane Guide
 published: 2024-12-10T14:36:17Z
-description: '15周工作'
+description: 'PennyLane Guide'
 image: ''
 tags: ['Quantum Computing']
 category: 'Quantum Computing'

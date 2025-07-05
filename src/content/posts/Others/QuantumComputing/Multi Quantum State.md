@@ -1,5 +1,5 @@
 ---
-title: Multi Quantum State
+title: 多量子系统
 published: 2024-10-11T13:01:35Z
 description: 'Multi Quantum State'
 image: ''
