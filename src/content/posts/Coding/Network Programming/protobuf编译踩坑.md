@@ -2,7 +2,7 @@
 title: protobuf编译踩坑
 published: 2025-05-10T14:26:36Z
 tags: ['C++']
-category: 'C++'
+category: '网络编程'
 ---
 
 # 在Win11下，使用VS2022编译Protobuf

@@ -1,8 +1,8 @@
 ---
-title: 02buffer和同步IO
+title: buffer和同步IO
 published: 2025-02-25T20:21:25Z
 tags: ['C++']
-category: 'C++'
+category: '网络编程'
 ---
 
 # buffer对象

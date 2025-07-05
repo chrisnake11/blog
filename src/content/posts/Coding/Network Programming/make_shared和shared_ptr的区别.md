@@ -2,7 +2,7 @@
 title: make_shared和shared_ptr的区别
 published: 2025-05-13T22:43:25Z
 tags: ['C++']
-category: 'C++'
+category: '网络编程'
 ---
 
 # make_shared和shared_ptr的区别
