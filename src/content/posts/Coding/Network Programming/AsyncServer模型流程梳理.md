@@ -2,7 +2,7 @@
 title: AsyncServer模型流程梳理
 published: 2025-05-11T11:42:04Z
 tags: ['C++']
-category: 'C++'
+category: '网络编程'
 ---
 
 # AsyncServer模型流程梳理
@@ -64,11 +64,11 @@ sequenceDiagram
 
 ### AsioIOServicePool(并发)
 
-AsioIOServicePool中，创建了多个`io_context`，这些`io_context`运行在多个CPU核心上，**并发地**执行不同的`CSession`上的异步IO与异步`HandleIO()`函数。
+AsioIOServicePool中，创建了多个`io_context`，这些`io_context`运行在多个CPU核心上，**并行地**执行不同的`CSession`上的异步IO与异步`HandleIO()`函数。
 
 `LogicSystem`负责单线程地从队列中读取数据，并执行对应的回调函数。随后调用`CSession`的`Send()`函数，并发地执行异步`Write()`。
 
-因此：在监听连接事件和异步IO的过程，利用了`io_context`多线程的并发。在LogicSystem执行数据处理的过程为单线程执行。
+因此：在监听连接事件和异步IO的过程，利用了`io_context`多线程的并行。在LogicSystem执行数据处理的过程为单线程执行。
 
 
 ### AsioIOThreadPool(并行)

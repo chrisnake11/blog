@@ -18,5 +18,13 @@
     "quickfix.biome": "always",
     "source.organizeImports.biome": "always"
   },
-  "frontMatter.dashboard.openOnStart": false
+  "frontMatter.dashboard.openOnStart": false,
+  "[markdown]": {
+    "editor.quickSuggestions": {
+      "comments": "on",
+      "strings": "on",
+      "other": "on"
+    },
+    "editor.defaultFormatter": "yzhang.markdown-all-in-one"
+  }
 }
