@@ -98,7 +98,7 @@ template <typename T>
 SimpleConnectionPool<T>::~SimpleConnectionPool() {
 	close();
 }
-
+ 
 template <typename T>
 std::shared_ptr<T> SimpleConnectionPool<T>::getConnection() {
 	std::unique_lock<std::mutex> lock(_mutex);
