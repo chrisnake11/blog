@@ -85,6 +85,7 @@ std::shared_ptr<T> SimpleConnectionPool<T>::createConnection() {
 template <typename T>
 void SimpleConnectionPool<T>::close() {
 	std::unique_lock<std::mutex> lock(_mutex);
+	_b_stop = true; // 设置连接池状态为停止
 	// clear the queue
 	while (!_queue.empty()) {
 		std::shared_ptr<T> conn = _queue.front();
