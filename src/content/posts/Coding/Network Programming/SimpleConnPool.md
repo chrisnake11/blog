@@ -44,6 +44,7 @@ public:
 	void close();
 
 private:
+	bool _b_stop; // 连接池状态
 	std::queue<std::shared_ptr<T>> _queue;
 	std::mutex _mute;
 	std::condition_variable _cond;
@@ -59,7 +60,7 @@ private:
 ```cpp
 
 template <typename T>
-SimpleConnectionPool<T>::SimpleConnectionPool(int max_connections) : _max_connections(max_connections) {
+SimpleConnectionPool<T>::SimpleConnectionPool(int max_connections) : _b_stop(false), _max_connections(max_connections) {
 	for (int i = 0; i < max_connections; i++) {
 		std::shared_ptr<T> conn = createConnection();
 		if (conn) {
@@ -101,8 +102,11 @@ template <typename T>
 std::shared_ptr<T> SimpleConnectionPool<T>::getConnection() {
 	std::unique_lock<std::mutex> lock(_mutex);
 	_cond.wait(lock, [this] {
-		return !_queue.empty();
-		});
+		return _b_stop || !_queue.empty();
+	});
+	if(_b_stop){
+		return nullptr; // 如果连接池已关闭，返回空指针
+	}
 	std::shared_ptr<T> conn = _queue.front();
     _queue.pop();
     return conn;
@@ -111,9 +115,16 @@ std::shared_ptr<T> SimpleConnectionPool<T>::getConnection() {
 template <typename T>
 void SimpleConnectionPool<T>::returnConnection(std::shared_ptr<T> conn) {
 	std::unique_lock<std::mutex> lock(_mutex);
-	_queue.push(conn);
-	lock.unlock();
-	_cond.notify_one();
+	if(!_b_stop){
+		_queue.push(conn);
+		lock.unlock();
+		_cond.notify_one();
+	}
+	else{
+		// 如果连接池已关闭，直接关闭连接
+		conn->close();
+	}
+	
 }
 ```
 
