@@ -12,7 +12,7 @@ category: 'C++'
 问题：假设存在以下三个C++文件，编译会报错。
 
 `global.h`: 定义两个变量
-```C++
+```cpp
 #pragma once
 #include <string>
 
@@ -22,12 +22,12 @@ std::string global_str = "hello";
 ```
 
 `global.cpp`: 直接包含头文件
-```C++
+```cpp
 #include "global.h"
 ```
 
 `main.cpp`: 同样包含头文件
-```C++
+```cpp
 #include <iostream>
 #include "global.h"
 
@@ -69,7 +69,7 @@ extern关键字，主要用于在头文件声明一个全局变量/函数，且�
 > 注：当不使用`extern`关键字时，编译器不会只声明变量，而是会**直接初始化（定义）变量**。
 
 `global.h`：添加extern关键字，去除定义变量的相关代码。
-```C++
+```cpp
 #pragma once
 #include <string>
 

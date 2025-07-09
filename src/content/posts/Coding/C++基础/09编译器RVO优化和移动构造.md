@@ -9,7 +9,7 @@ category: 'C++'
 
 RVO (Return Value Optimization，返回值优化)
 
-```C++
+```cpp
 class Test{
 public:
     int * data = 0;

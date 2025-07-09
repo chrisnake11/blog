@@ -18,7 +18,7 @@ category: 'C++'
 
 ## 
 
-```C++
+```cpp
 template<typename T>
 class has_foo{
 private:
@@ -43,7 +43,7 @@ public:
 
 ### class: false_type && true_type
 
-```C++
+```cpp
 // defualt, extend from false_type
 // std::false_type has a member called "value"; default, value = false;
 // has_value_type::value = false;

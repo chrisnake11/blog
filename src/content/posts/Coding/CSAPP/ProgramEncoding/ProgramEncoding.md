@@ -190,7 +190,7 @@ mov	D, S
 
 **cltq：**将%eax符号扩展到%rax
 
-```c++
+```cpp
 long exchange(long *xp, long y){
     long x = *xp;
     *xp = y;

@@ -12,7 +12,7 @@ category: 'C++'
 常量表达式是指值不会改变，且无需运行程序，在编译过程就可以得到计算结果的表达式。
 
 举例：
-```C++
+```cpp
 // size是常量表达式
 const int size = 100;
 
@@ -36,7 +36,7 @@ const int sz = sizeof(int);
 
 constexpr作用在指针上时，只对指针起作用，并不限制指针指向的对象。
 
-```C++
+```cpp
 // 
 constexpr int * p = nullptr;
 // 等价于

@@ -9,7 +9,7 @@ category: '网络编程'
 
 在单例模式的代码中，当我使用make_shared时，出现了如下的问题：
 
-```C++
+```cpp
 #pragma once
 #include <memory>
 #include <iostream>
@@ -82,7 +82,7 @@ LogicSystem::GetInstance()->PostMsgToQueue(std::make_shared<LogicNode>(_self_sha
 
 ### 为什么可以使用`shared_ptr<T>(new T)`的方式？
 
-```C++
+```cpp
 static std::shared_ptr<T> GetInstance() {
 	static std::once_flag flag;
 	std::call_once(flag, [&]() {
@@ -95,11 +95,11 @@ static std::shared_ptr<T> GetInstance() {
 由于`new T()`发生在作用域`Singleton<T>`类的作用域中。而`Singleton<T>`是`T`的友元类，因此可以访问`T`中的私有构造函数。
 
 但是，对于
-```C++
+```cpp
 _instance = std::make_shared<T>();
 ```
 本质上会被展开为两个部分
-```C++
+```cpp
 ::operator new() // allocate memory
 ::new(ptr) T() // construct T on ptr memory
 ```
