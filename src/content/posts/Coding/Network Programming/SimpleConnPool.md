@@ -30,6 +30,7 @@ draft: false
 #include <queue>
 #include <condition_variable>
 #include <memory>
+#include <atomic>
 
 template <typename T>
 class SimpleConnectionPool {
@@ -44,7 +45,7 @@ public:
 	void close();
 
 private:
-	bool _b_stop; // 连接池状态
+	std::atomic<bool> _b_stop; // 连接池状态
 	std::queue<std::shared_ptr<T>> _queue;
 	std::mutex _mute;
 	std::condition_variable _cond;
@@ -55,8 +56,76 @@ private:
 
 ```
 
-对应的实现部分如下：
+# 对应的实现部分如下：
 
+## `getConnection()`
+
+当连接池关闭时，或者连接池中没有可用连接时，`getConnection()`会阻塞等待，直到有连接可用或者连接池被关闭。
+> cond.wait()必须包含_b_stop，否则会导致其他线程修改_b_stop，导致死锁。
+
+如果获取连接池关闭，则返回空指针。
+
+```cpp
+template <typename T>
+std::shared_ptr<T> SimpleConnectionPool<T>::getConnection() {
+	std::unique_lock<std::mutex> lock(_mutex);
+	_cond.wait(lock, [this] {
+		return _b_stop || !_queue.empty();
+	});
+	if(_b_stop){
+		return nullptr; // 如果连接池已关闭，返回空指针
+	}
+	std::shared_ptr<T> conn = _queue.front();
+    _queue.pop();
+    return conn;
+}
+
+```
+
+## `returnConnection(conn)`
+
+如果连接池关闭，则在本地直接关闭连接。
+
+```cpp
+
+template <typename T>
+void SimpleConnectionPool<T>::returnConnection(std::shared_ptr<T> conn) {
+	std::unique_lock<std::mutex> lock(_mutex);
+	if(!_b_stop){
+		_queue.push(conn);
+		lock.unlock();
+		_cond.notify_one();
+	}
+	else{
+		// 如果连接池已关闭，直接关闭连接
+		conn->close();
+	}
+	
+}
+```
+
+
+## `close()`
+
+1. 修改`_b_stop`状态为`true`，表示连接池已关闭。
+2. 清空连接池中的所有连接，调用每个连接的`close()`方法。
+> 注意：如果连接的`close()`方法是阻塞的，可能会导致整个线程被阻塞，建议在实际应用中优化连接的关闭逻辑。
+
+```cpp
+template <typename T>
+void SimpleConnectionPool<T>::close() {
+	std::unique_lock<std::mutex> lock(_mutex);
+	_b_stop = true; // 设置连接池状态为停止
+	// clear the queue
+	while (!_queue.empty()) {
+		std::shared_ptr<T> conn = _queue.front();
+		_queue.pop();
+		conn->close(); // 如果连接close()阻塞，整个线程都会被阻塞，可以优化。
+	}
+}
+```
+
+## 其他部分代码实现
 ```cpp
 
 template <typename T>
@@ -83,49 +152,8 @@ std::shared_ptr<T> SimpleConnectionPool<T>::createConnection() {
 }
 
 template <typename T>
-void SimpleConnectionPool<T>::close() {
-	std::unique_lock<std::mutex> lock(_mutex);
-	_b_stop = true; // 设置连接池状态为停止
-	// clear the queue
-	while (!_queue.empty()) {
-		std::shared_ptr<T> conn = _queue.front();
-		_queue.pop();
-		conn->close(); // 如果连接close()阻塞，整个线程都会被阻塞，可以优化。
-	}
-}
-
-template <typename T>
 SimpleConnectionPool<T>::~SimpleConnectionPool() {
 	close();
-}
- 
-template <typename T>
-std::shared_ptr<T> SimpleConnectionPool<T>::getConnection() {
-	std::unique_lock<std::mutex> lock(_mutex);
-	_cond.wait(lock, [this] {
-		return _b_stop || !_queue.empty();
-	});
-	if(_b_stop){
-		return nullptr; // 如果连接池已关闭，返回空指针
-	}
-	std::shared_ptr<T> conn = _queue.front();
-    _queue.pop();
-    return conn;
-}
-
-template <typename T>
-void SimpleConnectionPool<T>::returnConnection(std::shared_ptr<T> conn) {
-	std::unique_lock<std::mutex> lock(_mutex);
-	if(!_b_stop){
-		_queue.push(conn);
-		lock.unlock();
-		_cond.notify_one();
-	}
-	else{
-		// 如果连接池已关闭，直接关闭连接
-		conn->close();
-	}
-	
 }
 ```
 
