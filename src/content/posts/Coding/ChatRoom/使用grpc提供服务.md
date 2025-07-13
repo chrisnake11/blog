@@ -1,5 +1,5 @@
 ---
-title: 使用grpc提供服务
+title: 使用gRPC提供服务
 published: 2025-07-13T10:34:18Z
 description: ''
 image: ''
@@ -10,12 +10,12 @@ category: 'C++'
 draft: false
 ---
 
-# 使用grpc提供服务
+# 使用gPRC提供服务
 
-grpc是一个高性能、开源和通用的RPC框架，支持多种编程语言。它基于HTTP/2协议，提供了流式传输、双向流、流控等特性。
+gPRC是一个高性能、开源和通用的RPC框架，支持多种编程语言。它基于HTTP/2协议，提供了流式传输、双向流、流控等特性。
 
-在C++中使用grpc提供服务的步骤如下：
-1. 安装grpc和protobuf
+在C++中使用gRPC提供服务的步骤如下：
+1. 安装gRPC和protobuf
 2. 编写.proto文件
 3. 使用protoc编译.proto文件
 4. 编写服务端代码
@@ -70,34 +70,34 @@ protoc.exe --cpp_out=. "message.proto"
 + `--cpp_out`选项指定生成C++代码的输出目录。
 + `message.proto`是要编译的.proto文件。
 
-生成grpc服务的C++代码，用于rpc服务。
+生成gRPC服务的C++代码，用于rpc服务。
 
 ```bash
-protoc.exe  -I="." --grpc_out="." --plugin=protoc-gen-grpc="grpc_cpp_plugin.exe" "message.proto"
+protoc.exe  -I="." --gRPC_out="." --plugin=protoc-gen-gRPC="gRPC_cpp_plugin.exe" "message.proto"
 ```
 
 + `-I`选项指定.proto文件的搜索路径。
-+ `--grpc_out`选项指定生成grpc代码的输出目录。
-+ `--plugin`选项指定grpc插件的路径。
++ `--gRPC_out`选项指定生成gRPC代码的输出目录。
++ `--plugin`选项指定gRPC插件的路径。
 
 ## 编写服务端代码
 
-在C++中编写服务端代码，使用grpc提供的API来实现服务。
+在C++中编写服务端代码，使用gRPC提供的API来实现服务。
 
 主要步骤如下：
 1. 引入生成的头文件
 2. 实现服务端类，继承生成的服务基类
 3. 实现服务方法
-4. 创建grpc服务器，注册服务
+4. 创建gRPC服务器，注册服务
 5. 启动服务器，监听端口
 
 
 ## 服务端代码示例：
 
-使用grpc提供ChatServer的轮询负载均衡服务，返回有效的服务器地址，并使用boost::asio来监听终止信号。
+使用gRPC提供ChatServer的轮询负载均衡服务，返回有效的服务器地址，并使用boost::asio来监听终止信号。
 
-grpc服务端实现步骤：
-1. 创建grpc服务实例
+gRPC服务端实现步骤：
+1. 创建gRPC服务实例
 2. 监听端口
 3. 注册服务
 4. 启动服务器
@@ -105,20 +105,20 @@ grpc服务端实现步骤：
 void RunServer() {
 	auto& cfg = ConfigManager::GetInstance();
 
-	// grpc监听的地址
+	// gRPC监听的地址
 	std::string server_address(cfg["StatusServer"]["Host"] + ":" + cfg["StatusServer"]["Port"]);
 	
-	// grpc服务实例
+	// gRPC服务实例
 	StatusServiceImpl service;
 
-	// 创建grpc服务器
-	grpc::ServerBuilder builder;
+	// 创建gRPC服务器
+	gRPC::ServerBuilder builder;
 	// 监听端口和添加服务
-	builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+	builder.AddListeningPort(server_address, gRPC::InsecureServerCredentials());
 	builder.RegisterService(&service);
 
 	// 构建并启动gRPC服务器
-	std::unique_ptr<grpc::Server> server(builder.BuildAndStart());
+	std::unique_ptr<gRPC::Server> server(builder.BuildAndStart());
 	std::cout << "Server listening on " << server_address << std::endl;
 
 	// 创建Boost.Asio的io_context监听终止信号
@@ -134,23 +134,23 @@ void RunServer() {
 	// 守护线程运行io_context，捕获SIGINT信号
 	std::thread([&io_context]() { io_context.run(); }).detach();
 
-	// 等待grpc服务器关闭
+	// 等待gRPC服务器关闭
 	server->Wait();
 	// 停止boost的io_context服务
 	io_context.stop();
 }
 ```
 
-## grpc服务类的实现
+## gRPC服务类的实现
 ```cpp
 #pragma once
-#include <grpcpp/grpcpp.h>
-#include "message.grpc.pb.h"
+#include <gRPCpp/gRPCpp.h>
+#include "message.gRPC.pb.h"
 
-using grpc::Server;
-using grpc::ServerBuilder;
-using grpc::ServerContext;
-using grpc::Status;
+using gRPC::Server;
+using gRPC::ServerBuilder;
+using gRPC::ServerContext;
+using gRPC::Status;
 using message::GetChatServerReq;
 using message::GetChatServerRsp;
 using message::StatusService;
