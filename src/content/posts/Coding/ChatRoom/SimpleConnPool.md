@@ -3,7 +3,7 @@ title: SimpleConnPool
 published: 2025-07-08T19:11:49Z
 description: '简单的连接池实现，支持多线程的安全连接获取和释放。'
 image: ''
-tags: [Network Programming, C++]
+tags: [ChatRoom, 网络编程 , C++]
 category: 'C++'
 draft: false
 ---
