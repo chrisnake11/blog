@@ -3,7 +3,7 @@ title: thread移动和MVP问题
 published: 2025-07-23T14:34:54Z
 description: 'std::thread所属权的移动，以及C++中最烦人的解析(Most Vexing Parse)问题。构造函数中右值引用参数的使用。'
 image: ''
-tags: [C++, Concurrency, Thread]
+tags: [C++, Concurrency, Thread, 读书笔记]
 category: 'C++'
 draft: false
 ---
