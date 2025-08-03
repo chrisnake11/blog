@@ -4,7 +4,7 @@ published: 2025-08-02T11:00:28Z
 description: '介绍ChatRoom登录流程的各个模块功能，以及登录流程。'
 image: ''
 tags: [Chatroom, C++]
-category: 'Chatroom'
+category: 'ChatRoom'
 draft: false
 ---
 
