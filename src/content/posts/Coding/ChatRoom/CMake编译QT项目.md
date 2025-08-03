@@ -1,5 +1,5 @@
 ---
-title: CMake编译项目
+title: CMake编译QT项目
 published: 2025-08-03T14:11:29Z
 description: ''
 image: ''
@@ -8,7 +8,7 @@ category: 'ChatRoom'
 draft: false
 ---
 
-# CMake编译项目
+# CMake编译QT项目
 
 使用CMake来编译ChatRoom项目，避免在直接使用QT Creator的qmake时，出现文件丢失无法找到等奇奇怪怪的问题。并且项目结构更加清晰，易于维护。
 
