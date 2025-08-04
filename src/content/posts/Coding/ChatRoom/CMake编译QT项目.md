@@ -1,7 +1,7 @@
 ---
 title: CMake编译QT项目
 published: 2025-08-03T14:11:29Z
-description: ''
+description: '使用CMake来编译ChatRoom项目，避免在直接使用QT Creator的qmake时，出现文件丢失无法找到等奇奇怪怪的问题。'
 image: ''
 tags: [ChatRoom, CMake, C++]
 category: 'ChatRoom'
@@ -10,7 +10,13 @@ draft: false
 
 # CMake编译QT项目
 
-使用CMake来编译ChatRoom项目，避免在直接使用QT Creator的qmake时，出现文件丢失无法找到等奇奇怪怪的问题。并且项目结构更加清晰，易于维护。
+使用CMake来编译ChatRoom项目，避免在直接使用QT Creator的qmake时，出现文件丢失无法找到等奇奇怪怪的问题，利用CMake提供跨平台编译功能。
+
+后续提供了完整的`CMakeLists.txt`文件和编译命令，以及如何创建QT窗口的`.ui`文件和对应的`.h`、`.cpp`文件的说明。
+
+相关代码可以参考[我的仓库](https://github.com/chrisnake11/ChatClient)：
+
+::github{repo="chrisnake11/ChatClient"}
 
 ## 项目目录
 
@@ -147,6 +153,10 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
 
 ## 编译命令
 
+根据项目平台和编译器的不同，编译命令会有所不同。以下是Windows平台下使用MSVC 2022编译器的示例命令。
+
+如果要编译Linux或其他平台，请根据实际情况调整`CMAKE_PREFIX_PATH`和编译器选项。
+
 ```bash
 # 在源代码目录下
 mkdir build
@@ -175,3 +185,15 @@ cmake --build . --config Debug
 并使用`add_custom_command`在构建后将资源文件复制到可执行文件目录，确保资源文件在运行时可用。
 
 可执行文件目录的资源文件目录，应当与源代码目录的资源文件目录结构一致。
+
+# ui文件的创建和使用
+
+在vscode中，可以直接创建一个空的.ui文件，然后使用Qt Designer打开并编辑，**修改窗口的`QObject`名称**。保存并覆盖原有的.ui文件即可。
+
+## h文件和cpp文件
+
+在vscode中创建于窗口`QObject`同名的`.h`和`.cpp`文件，然后在`CMakeLists.txt`中添加到`SOURCES`和`HEADERS`变量中。
+
+> 注意：在`.cpp`文件中需要`#include "ui_xxx.h"`来包含自动生成的UI类头文件。
+> 
+> 不必担心`ui_xxx.h`目前缺少文件，CMake会编译时自动生成，并且在构建过程中会将其包含到目标文件中，并不会影响编译。
