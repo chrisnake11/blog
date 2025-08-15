@@ -10,7 +10,7 @@ draft: false
 
 # QScrollArea使用与悬浮滚动条
 
-在构造ChatRoom聊天项目的QT客户端界面时，我需要对联系人和聊天记录进行滚动查看处理，因此使用了QScrollArea来实现这一功能。
+在构造ChatRoom聊天项目的QT客户端界面时，我需要对联系人和聊天记录进行滚动查看处理，因此使用了QScrollArea来实现这一功能。  
 
 QScrollArea是QT中用于显示可滚动内容的组件，它可以包含一个子组件(QWidget)，并提供滚动条来查看子组件超出QScrollArea可视区域的部分。QScrollArea的界面结构如下：
 + QScrollArea
