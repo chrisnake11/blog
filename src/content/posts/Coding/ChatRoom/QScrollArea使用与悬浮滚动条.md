@@ -57,27 +57,31 @@ public:
     explicit CustomScrollArea(QWidget *parent = nullptr);
 
 protected:
+    // 鼠标进入和离开事件
     void enterEvent(QEnterEvent *event) override;
     void leaveEvent(QEvent *event) override;
 
 protected slots:
+    void showScrollBars();
     // 延迟隐藏滚动条
     void hideScrollBars();
     // 悬浮滚动条同步方法
     void onOverlayScrollBarValueChanged(int value);
     void onVerticalScrollBarValueChanged(int value);
     void updateOverlayScrollBarRange(int min, int max);
-    void showScrollBars();
 
 protected:
     // 计时器，用于延迟隐藏滚动条
     QTimer *hideTimer;
     bool isScrollBarVisible;
+    // 悬浮滚动条
     QScrollBar* _overlayScrollBar;
 };
 
 #endif // CUSTOMSCROLLAREA_H
 ```
+
+构造函数的实现：单独构造一个QScrollBar类，并设置为子类以及对应的样式表。QT的子类自动悬浮于父组件。
 
 ```cpp
 #include "CustomScrollArea.h"
@@ -148,7 +152,14 @@ CustomScrollArea::CustomScrollArea(QWidget *parent)
     // 启用鼠标跟踪
     setMouseTracking(true);
 }
+```
 
+悬浮滚动条的显示和隐藏事件，以及对应的槽函数。
+
++ 当鼠标进入范围，直接显示滚动条，重置定时器。
++ 当鼠标离开范围，使用定时器来延迟隐藏滚动条，当计时器超时后，隐藏滚动条。
+
+```cpp 
 void CustomScrollArea::enterEvent(QEnterEvent *event)
 {
     showScrollBars();
@@ -183,7 +194,13 @@ void CustomScrollArea::hideScrollBars()
     }
     isScrollBarVisible = false;
 }
+```
 
+编写关于滚动条值和范围的槽函数，同步悬浮滚动条和原生滚动条的状态。
+
+使用`blockSignals(true)`和`blockSignals(false)`来防止无限递归调用。
+
+```cpp
 void CustomScrollArea::onOverlayScrollBarValueChanged(int value)
 {
     // 防止无限递归，触发值改变事件
