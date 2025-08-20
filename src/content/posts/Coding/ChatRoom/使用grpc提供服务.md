@@ -72,6 +72,7 @@ protoc.exe --cpp_out=. "message.proto"
 
 生成gRPC服务的C++代码，用于rpc服务。
 
+
 ```bash
 protoc.exe  -I="." --gRPC_out="." --plugin=protoc-gen-gRPC="gRPC_cpp_plugin.exe" "message.proto"
 ```
@@ -79,6 +80,24 @@ protoc.exe  -I="." --gRPC_out="." --plugin=protoc-gen-gRPC="gRPC_cpp_plugin.exe"
 + `-I`选项指定.proto文件的搜索路径。
 + `--gRPC_out`选项指定生成gRPC代码的输出目录。
 + `--plugin`选项指定gRPC插件的路径。
+
+
+### 生成gRPC服务的脚本
+```bash
+@echo off
+
+set PROTOC_PATH=D:\dev\grpc\visualstudio\third_party\protobuf\Debug\protoc.exe
+set GRPC_PLUGIN_PATH=D:\dev\grpc\visualstudio\Debug\grpc_cpp_plugin.exe
+set PROTO_FILE=message.proto
+
+echo Generating gRPC code...
+%PROTOC_PATH% -I="." --grpc_out="." --plugin=protoc-gen-grpc="%GRPC_PLUGIN_PATH%" "%PROTO_FILE%"
+
+echo Generating C++ code...
+%PROTOC_PATH% --cpp_out="." "%PROTO_FILE%"
+
+echo Done
+```
 
 ## 编写服务端代码
 
