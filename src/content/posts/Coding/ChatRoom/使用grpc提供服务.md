@@ -3,9 +3,7 @@ title: 使用gRPC提供服务
 published: 2025-07-13T10:34:18Z
 description: ''
 image: ''
-tags: [
-    gRPC, C++, 网络编程, ChatRoom
-]
+tags: [gRPC, C++, 网络编程, ChatRoom]
 category: 'C++'
 draft: false
 ---
