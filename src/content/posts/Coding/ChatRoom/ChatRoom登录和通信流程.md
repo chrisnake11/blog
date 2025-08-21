@@ -1,6 +1,6 @@
 ---
 title: ChatRoom登录和通信流程
-published: 2025-08-02T11:00:28Z
+published: 2025-08-21T11:00:28Z
 description: '介绍ChatRoom登录和通信流程中，各个模块的功能以及步骤。'
 image: ''
 tags: [Chatroom, C++]
