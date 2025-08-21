@@ -1,7 +1,7 @@
 ---
 title: vcpkg配置redis库
 published: 2025-05-30T00:21:18Z
-tags: [C++, 网络编程, redis, vcpkg]
+tags: [C++, 网络编程, redis, vcpkg, ChatRoom]
 category: 'C++'
 ---
 
