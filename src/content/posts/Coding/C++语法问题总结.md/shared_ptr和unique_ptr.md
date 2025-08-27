@@ -53,6 +53,7 @@ void handleMessage() {
 }
 ```
 
+## 注意，在QT中，信号和槽之间的信号传递机制，是通过拷贝参数实现的，因此不要使用`unique_ptr`作为信号参数传递，而是使用`shared_ptr`
 
 ## 错误：不要给`unique_ptr`使用const关键字
 

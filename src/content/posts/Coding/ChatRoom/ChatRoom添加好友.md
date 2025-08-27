@@ -69,6 +69,7 @@ CREATE TABLE friend_relationship (
     friend_id BIGINT NOT NULL,
     friend_status TINYINT NOT NULL,       -- 0: accepted, 1: blocked
     create_time DATETIME DEFAULT CURRENT_TIMESTAMP,
+    last_message_id BIGINT UNSIGNED,
     
     -- 生成列保证双向唯一
     uid_min BIGINT GENERATED ALWAYS AS (LEAST(user_id, friend_id)) STORED,
