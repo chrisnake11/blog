@@ -94,9 +94,9 @@ struct Scene {
 
 并且，`Mesh`会作为`Model`的成员变量，由`Model`来调用`Mesh`中的构建网格和渲染网格的相关接口。
 
-### 代码
+## 代码
 
-#### Mesh 网格类
+### Mesh 网格类
 
 ```cpp
 //
@@ -214,7 +214,7 @@ void Mesh::draw(const Shader &shader) const {
 }
 ```
 
-#### Model 模型类
+### Model 模型类
 
 ```cpp
 //
@@ -428,6 +428,276 @@ unsigned int TextureFromFile(const char* path, const std::string& directory, boo
 }
 ```
 
+### 编写着色器，为模型着色
+
+顶点着色器（vertex shader）：我们在setupMesh函数中，已经将顶点位置、法线、纹理坐标绑定到顶点属性0、1、2上。因此在顶点着色器中可以得到对应的`aPos, aNormal, aTexCoords`属性。
+
+随后将顶点坐标通过`model, view, projection`矩阵变换到裁剪空间，因此需要用到`model, view, projection`三个矩阵的`uniform`变量。
+
+最后，我们将片元坐标（顶点位置乘以model矩阵），法线和纹理坐标传递给片段着色器。
+
+```glsl
+#version 330 core
+layout (location = 0) in vec3 aPos;
+layout (location = 1) in vec3 aNormal;
+layout (location = 2) in vec2 aTexCoords;
+
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+
+out vec3 FragPos;
+out vec3 Normal;
+out vec2 TexCoords;
+
+void main()
+{
+    FragPos = vec3(model * vec4(aPos, 1.0));
+    Normal = mat3(transpose(inverse(model))) * aNormal;
+    TexCoords = aTexCoords;
+    gl_Position = projection * view * vec4(FragPos, 1.0);
+}
+```
+
+片段着色器（fragment shader）：在片段着色器中，我们需要接收顶点着色器传递的法线和纹理坐标，接收光源属性的`uniform`变量，材质的纹理采样器`uniform sampler2D`变量，以及摄像机观察位置的`uniform`变量。
+
+分别计算最终的环境光、漫反射、镜面反射、衰减、聚光灯等光照效果，最后将结果输出。
+
+```glsl
+#version 330 core
+
+struct SpotLight {
+    vec3 position;
+    vec3 direction;
+    vec3 lightColor;
+
+    vec3 ambient;
+    vec3 diffuse;
+    vec3 specular;
+
+    float constant;
+    float linear;
+    float quadratic;
+    float cutOff;
+    float outerCutOff;
+};
+
+in vec2 TexCoords;
+in vec3 Normal;
+in vec3 FragPos;
+
+uniform SpotLight spotLight;
+uniform sampler2D texture_diffuse1;
+uniform vec3 viewPos;
+
+out vec4 FragColor;
+
+void main()
+{
+    // ambient
+    vec3 texture1 = texture(texture_diffuse1, TexCoords).rgb;
+    vec3 ambient = spotLight.lightColor * texture1 * spotLight.ambient;
+    // diffuse
+    vec3 norm = normalize(Normal);
+    vec3 lightDir = normalize(spotLight.position - FragPos);
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec3 diffuse = spotLight.lightColor * diff * texture1 * spotLight.diffuse;
+
+    // specular
+    vec3 viewDir = normalize(viewPos - FragPos);
+    vec3 h = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(norm, h), 0.0), 32.0);
+    vec3 specular = spotLight.lightColor * spec * texture1 * spotLight.specular;
+
+    // 衰减
+    float distance = length(spotLight.position - FragPos);
+    float attenuation = 1.0 / (spotLight.constant + spotLight.linear * distance +
+                 spotLight.quadratic * (distance * distance));
+    // spot light
+    float theta = dot(lightDir, normalize(-spotLight.direction));
+    float epsilon = spotLight.cutOff - spotLight.outerCutOff;
+    float intensity = clamp((theta - spotLight.outerCutOff) / epsilon, 0.0, 1.0);
+
+    vec3 result  = (ambient + (diffuse + specular) * intensity * attenuation);
+
+    FragColor = vec4(result, 1.0);
+}
+```
+
+### main.cpp
+
+```cpp
+#define STB_IMAGE_IMPLEMENTATION
+#include <glad/glad.h>
+#include <glfw/glfw3.h>
+#include <iostream>
+#include "stb_image.h"
+#include "Camera.h"
+#include "Shader.h"
+#include <memory>
+#include <vector>
+#include "Model.h"
+
+void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+void inputProcess(GLFWwindow* window);
+void mouseCallback(GLFWwindow* window, double xPos, double yPos);
+void scrollCallback(GLFWwindow* window, double xOffset, double yOffset);
+unsigned int loadTexture(const char* path);
+
+constexpr int SCR_WIDTH = 800;
+constexpr int SCR_HEIGHT = 600;
+
+Camera camera{glm::vec3(0.5f, 1.0f, 7.0f), glm::vec3(0.0f, 1.0f, 0.0f), -100.0f, -15.0f}; // initial position
+
+// cursor in center initially
+float lastX = SCR_WIDTH / 2.0f;
+float lastY = SCR_HEIGHT / 2.0f;
+bool firstMouse = true;
+
+constexpr auto lightColor = glm::vec3(1.0f);
+constexpr auto lightPos = glm::vec3(-3.0f, 3.3f, -7.0f);
+constexpr auto lightConstant = 1.0f;
+constexpr auto lightLinear = 0.09f;
+constexpr auto lightQuadratic = 0.032f;
+constexpr auto lightCutOff = glm::radians(13.0f);
+constexpr auto lightOuterCutOff = glm::radians(17.0f);
+
+// ambient lighting parameters
+float ambientLightIntensity = 0.1f;
+
+float deltaTime = 0.0f; // time between current frame and last frame
+float lastFrame = 0.0f;
+
+int main(){
+    if(!glfwInit()){
+        std::cout << "Failed to initialize GLFW" << std::endl;
+        return -1;
+    }
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", nullptr, nullptr);
+    if(!window){
+        std::cout << "Failed to create GLFW window" << std::endl;
+        glfwTerminate();
+        return -1;
+    }
+    glfwMakeContextCurrent(window);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);
+
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    
+    if(!gladLoadGLLoader(reinterpret_cast<GLADloadproc>(glfwGetProcAddress))){
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
+
+    // load shader
+    auto colorVertexPath = "./color.vs";
+    auto colorFragmentPath = "./color.fs";
+    const auto colorShader = std::make_unique<Shader>(colorVertexPath, colorFragmentPath);
+
+    colorShader->use();
+
+    const Model ourModel("./backpack.obj");
+
+    glEnable(GL_DEPTH_TEST);
+
+    while (!glfwWindowShouldClose(window)){
+
+        const auto currentTime = static_cast<float>(glfwGetTime());
+        deltaTime = currentTime - lastFrame;
+        lastFrame = currentTime;
+
+        inputProcess(window);
+
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
+        colorShader->use();
+        colorShader->setVec3("spotLight.position", camera.Position);
+        colorShader->setVec3("spotLight.direction", camera.Front);
+        colorShader->setVec3("spotLight.lightColor", lightColor);
+        colorShader->setVec3("spotLight.ambient", glm::vec3(0.2f, 0.05f, 0.05f));
+        colorShader->setVec3("spotLight.diffuse", glm::vec3(0.2f, 0.05f, 0.05f));
+        colorShader->setVec3("spotLight.specular", glm::vec3(0.4f));
+        colorShader->setFloat("spotLight.constant", lightConstant);
+        colorShader->setFloat("spotLight.linear", lightLinear);
+        colorShader->setFloat("spotLight.quadratic", lightQuadratic);
+        colorShader->setFloat("spotLight.cutOff", glm::cos(lightCutOff));
+        colorShader->setFloat("spotLight.outerCutOff", glm::cos(lightOuterCutOff));
+        colorShader->setVec3("viewPos", camera.Position);
+
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), static_cast<float>(SCR_WIDTH) / static_cast<float>(SCR_HEIGHT), 0.1f, 100.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f));
+        model = glm::scale(model, glm::vec3(1.0f));
+        colorShader->setMat4("projection", projection);
+        colorShader->setMat4("view", view);
+        colorShader->setMat4("model", model);
+        ourModel.draw(*colorShader);
+
+        glBindVertexArray(0);
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+
+    glfwTerminate();
+    return 0;
+}
+
+void framebuffer_size_callback(GLFWwindow* window, const int width, const int height){
+    glViewport(0, 0, width, height);
+}
+
+void inputProcess(GLFWwindow* window){
+    // esc, show cursor
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    // focus window, hide cursor
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    // move camera
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        camera.ProcessKeyboard(FORWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        camera.ProcessKeyboard(BACKWARD, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        camera.ProcessKeyboard(LEFT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        camera.ProcessKeyboard(RIGHT, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
+        camera.ProcessKeyboard(UP, deltaTime);
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
+        camera.ProcessKeyboard(DOWN, deltaTime);
+}
+
+void mouseCallback(GLFWwindow* window, const double xPos, const double yPos){
+    if(firstMouse){
+        lastX = static_cast<float>(xPos);
+        lastY = static_cast<float>(yPos);
+        firstMouse = false;
+    }
+
+    const float xOffset = static_cast<float>(xPos) - lastX;
+    const float yOffset = lastY - static_cast<float>(yPos); // reversed since y-coordinates go from bottom to top
+
+    lastX = static_cast<float>(xPos);
+    lastY = static_cast<float>(yPos);
+
+    camera.ProcessMouseMovement(xOffset, yOffset);
+}
+
+void scrollCallback(GLFWwindow* window, const double xOffset, const double yOffset){
+    camera.ProcessMouseScroll(static_cast<float>(yOffset));
+}
+```
 
 # 参考资料
 
